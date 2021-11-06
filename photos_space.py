@@ -1,8 +1,67 @@
+import logging
 import os
 
 import requests
-from urllib.parse import urlparse
+
 from dotenv import load_dotenv
+from telegram import Update, ForceReply
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from urllib.parse import urlparse
+
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                     level=logging.INFO)
+
+updater = Updater(token="2127492642:AAFC4-Ey3WTtFNCcSzbDN7Z7y1ePaw8IbTU", use_context=True)
+dispatcher = updater.dispatcher
+
+
+def start(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
+
+
+start_handler = CommandHandler("start", start)
+dispatcher.add_handler(start_handler)
+
+
+def hi(update, context):
+    user = update.effective_user
+    update.message.reply_markdown_v2(
+        fr'Hi {user.mention_markdown_v2()}\!',
+        reply_markup=ForceReply(selective=True),
+    )
+
+
+hi_handler = CommandHandler("hi", hi)
+dispatcher.add_handler(hi_handler)
+
+
+def echo(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
+
+
+echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
+dispatcher.add_handler(echo_handler)
+
+
+def caps(update, context):
+    text_caps = " ".join(context.args).upper()
+    context.bot.send_message(chat_id=update.effective_chat.id, text=text_caps)
+
+
+caps_handler = CommandHandler("caps", caps)
+dispatcher.add_handler(caps_handler)
+
+
+def unknown(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
+
+
+unknown_handler = MessageHandler(Filters.command, unknown)
+dispatcher.add_handler(unknown_handler)
+
+updater.start_polling()
+# updater.stop()
 
 
 def get_container_links(url):
@@ -40,6 +99,6 @@ if __name__ == "__main__":
     month = "07"
     day = "03"
     url_archive = f"https://api.nasa.gov/EPIC/api/natural/date/{year}-{month}-{day}"
-    fetch_spacex_last_launch(dir_name=dirname)
+    # fetch_spacex_last_launch(dir_name=dirname)
 
 
