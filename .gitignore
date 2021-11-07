@@ -16,6 +16,8 @@ Thumbs.db
 .DS_Store
 probe.py
 
+probe2.py
+
 # config  files
 auth.py
 config.py
