@@ -5,7 +5,6 @@ import os
 import time
 import random
 import urllib
-from multiprocessing import Process
 from urllib.parse import urlparse
 
 import requests
@@ -52,7 +51,7 @@ def fetch_spacex_last_launch(token):
     url = "https://api.spacexdata.com/v3/launches/55"
     container_links = get_container_links(url=url, token=token)
     file_path = get_file_path(dir_name=dirname)
-    for image_url_number, image_url in enumerate(container_links['links']['flickr_images']):
+    for image_url_number, image_url in enumerate(container_links["links"]["flickr_images"]):
         response_image = requests.get(image_url)
         response_image.raise_for_status()
         logging.warning(response_image.status_code)

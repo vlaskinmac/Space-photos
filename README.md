@@ -13,9 +13,15 @@ This script is written as part of the task of the courses [Devman](https://dvmn.
 
 - Photos in real color.
 
+<img src="https://user-images.githubusercontent.com/78322994/140647471-a178cbd6-4d2a-4387-8db4-7c74b344a680.png" alt="drawing" width="200"/>  
 
-<img src="https://user-images.githubusercontent.com/78322994/140647471-a178cbd6-4d2a-4387-8db4-7c74b344a680.png" alt="drawing" width="200"/> <img src="https://user-images.githubusercontent.com/78322994/140647474-46b29d3f-5227-4c11-b3c1-67a0ba0678eb.png" alt="drawing" width="200"/> <img src="https://user-images.githubusercontent.com/78322994/140647475-18735c1d-5dbb-44e2-a9a0-35041bb8e7a1.png" alt="drawing" width="200"/> <img src="https://user-images.githubusercontent.com/78322994/140647478-6d43996f-9208-4b7f-a737-93e9a2d64605.png" alt="drawing" width="200"/> <img src="https://user-images.githubusercontent.com/78322994/140647479-1d896c98-6e9a-4a4b-b528-86ce3bf7ab36.png" alt="drawing" width="200"/> <img src="https://user-images.githubusercontent.com/78322994/140647481-1d167daf-078d-4c9c-b5a7-11c59b5509ca.png" alt="drawing" width="200"/>
+- The script also downloads photos of the last [NASA](https://www.nasa.gov) launch:
 
+<img src="https://user-images.githubusercontent.com/78322994/140932027-ef5be459-74fa-470d-bb28-25807e2e5943.jpg" alt="drawing" width="200"/>
+
+- And uploads a photo of the day of space from [NASA](https://www.nasa.gov):
+
+<img src="https://user-images.githubusercontent.com/78322994/140932208-35b01f9f-c6d5-4428-97b7-fda3c31a4d36.jpg" alt="drawing" width="200"/> 
 
 ## Getting Started
 
@@ -37,9 +43,6 @@ pip3 install -r requirements.txt
 
 ```
 
-## Variables
-
-- Сhat id must be registered in the **CHAT_ID** constant.
 
 ## Getting API key
 
@@ -65,12 +68,15 @@ You need to create a `.env` file and write all sensitive data into it, like this
 ```python
 API_KEY_NASA="272a05d39ec46fdac5be4ac7be45f3f"
 API_KEY_BOT="2127492642:AAFC4-Ey3WTtFNCcSzbDN7Z7y1ePaw8IbTU"
+CHAT_ID = -1001647060957
 ```
 
 ## Launch code
 #### Arguments
 - Set the update period in hours use arguments: **-hh** or **--hours**
 - Set the update period in seconds use arguments: **-s** or **--seconds**
+- Uploads a photo of space day use arguments: '-a or --apoid' and command: **`APOID`**
+- Uploads photos of the last [NASA](https://www.nasa.gov) launch use arguments: '-l or --last' and command: **`LAST`**
 - To call help, use the required arguments **-h** or **--help**
 
 **Examples of commands:**
@@ -86,6 +92,16 @@ $ python photos_space.py --hours 4
 - Running code without arguments the default period is once every 24 hours:
 ```python
 $ python photos_space.py 
+```
+
+- Uploads a photo of space day:
+```python
+$ python photos_space.py -a APOID
+```
+
+- Uploads photos of the last [NASA](https://www.nasa.gov) launch:
+```python
+$ python photos_space.py -l LAST
 ```
 
 ## Authors
