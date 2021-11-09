@@ -2,16 +2,16 @@ import argparse
 import datetime
 import logging
 import os
-import time
 import random
+import time
 import urllib
 from urllib.parse import urlparse
 
 import requests
 import telegram
 
-from telegram import TelegramError
 from dotenv import load_dotenv
+from telegram import TelegramError
 
 
 def get_container_links(url, token):
