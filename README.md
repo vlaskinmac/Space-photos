@@ -75,7 +75,7 @@ CHAT_ID = -1001647060957
 #### Arguments
 - Set the update period in hours use arguments: **-hh** or **--hours**
 - Set the update period in seconds use arguments: **-s** or **--seconds**
-- Uploads a photo of space day use arguments: '-a or --apoid' and command: **`APOID`**
+- Uploads a photo of space day use arguments: '-a or --apod' and command: **`APOD`**
 - Uploads photos of the last [NASA](https://www.nasa.gov) launch use arguments: '-l or --last' and command: **`LAST`**
 - To call help, use the required arguments **-h** or **--help**
 
@@ -96,7 +96,7 @@ $ python photos_space.py
 
 - Uploads a photo of space day:
 ```python
-$ python photos_space.py -a APOID
+$ python photos_space.py -a APOD
 ```
 
 - Uploads photos of the last [NASA](https://www.nasa.gov) launch:

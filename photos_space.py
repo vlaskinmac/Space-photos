@@ -119,24 +119,26 @@ def get_period_from_user():
         "-s", "--seconds", help="Set the update period in seconds use arguments: '-s or --seconds'"
     )
     parser.add_argument(
-        "-a", "--apoid", help="Uploads a photo of space day use arguments: '-a or --apoid' and command: APOID"
+        "-a", "--apod", help="Uploads a photo of space day use arguments: '-a or --apod' and command: APOD"
     )
     parser.add_argument(
         "-l", "--last", help="Uploads photos of the last NASA launch use arguments: '-l or --last' and command: LAST"
     )
     args_timeout_hours = parser.parse_args().hours
     args_timeout_seconds = parser.parse_args().seconds
-    args_apoid = parser.parse_args().apoid
+    args_apod = parser.parse_args().apod
     args_last_launch = parser.parse_args().last
 
     if args_timeout_hours:
         return int(args_timeout_hours)
     elif args_timeout_seconds:
         return float(args_timeout_seconds) / 60 / 60
-    elif args_apoid:
+    elif args_apod:
         get_apod_images(token=os.getenv("API_KEY_NASA"))
+        exit()
     elif args_last_launch:
         fetch_spacex_last_launch(token=os.getenv("API_KEY_NASA"))
+        exit()
     else:
         return 24
 
