@@ -38,6 +38,7 @@ def get_apod_images(token):
         if image_url["media_type"] == "image":
             response_image = requests.get(image_url["url"])
             response_image.raise_for_status()
+            logging.warning(response_image.status_code)
             cut_path_url = urlparse(image_url["url"])
             cut_path_clean = urllib.parse.unquote(cut_path_url.path)
             name_file_url = os.path.split(cut_path_clean)
@@ -54,6 +55,7 @@ def fetch_spacex_last_launch(token):
     for image_url_number, image_url in enumerate(container_links['links']['flickr_images']):
         response_image = requests.get(image_url)
         response_image.raise_for_status()
+        logging.warning(response_image.status_code)
         cut_path_url = urlparse(image_url)
         cut_path_clean = urllib.parse.unquote(cut_path_url.path)
         name_file_url = os.path.split(cut_path_clean)
@@ -62,15 +64,14 @@ def fetch_spacex_last_launch(token):
             file.write(response_image.content)
 
 
-def get_earth_images(url_archive, token, dir_name, year, month, day):
+def get_earth_images(url_archive, token, year, month, day):
+    dirname = "earth"
     container_links = get_container_links(url=url_archive, token=token)
     if not container_links:
         logging.warning("Нет данных")
         print("Нет данных")
         exit()
-    if not os.path.exists(dir_name):
-        os.mkdir(dir_name)
-    file_path = os.path.abspath(dir_name)
+    file_path = get_file_path(dir_name=dirname)
     for image_url_number, image_url in enumerate(container_links):
         data = {"api_key": token}
         url_image = f"https://api.nasa.gov/EPIC/archive/natural/" \
@@ -87,11 +88,10 @@ def get_earth_images(url_archive, token, dir_name, year, month, day):
     return file_path
 
 
-def publish_photo(token, token_bot, dir_name, year, month, day, url, timeout, chat_id):
+def publish_photo(token, token_bot, year, month, day, url, timeout, chat_id):
     file_path = get_earth_images(
         url_archive=url,
         token=token,
-        dir_name=dir_name,
         year=year,
         month=month,
         day=day,
@@ -133,19 +133,7 @@ def get_period_from_user():
 def defines_timeout_user():
     timeout_user = get_period_from_user()
     timeout = 60 * 60 * timeout_user
-    if (int(timeout_user) > 1) and (float(timeout) / 60 / 60 != 24):
-        print(f"--- Выбрана публикация раз в {timeout_user} часа ---")
-        timeout_user = timeout
-        timeout_user_info = f"{timeout_user} часа"
-    elif float(timeout_user) < 1:
-        print(f"--- Выбрана публикация раз в {int(timeout)} секунд ---")
-        timeout_user = int(timeout)
-        timeout_user_info = f"{int(timeout)} секунд"
-    else:
-        print(f"--- Публикация по умолчанию раз в {timeout_user} часа ---")
-        timeout_user = timeout_user
-        timeout_user_info = f"{timeout_user} часа"
-    return timeout, timeout_user, timeout_user_info
+    return timeout
 
 
 def main():
@@ -157,7 +145,7 @@ def main():
     )
     load_dotenv()
     today = datetime.date.today()
-    timeout, timeout_user, timeout_user_info = defines_timeout_user()
+    timeout = defines_timeout_user()
     if today.day < 10:
         today_day = f"0{today.day - 2}"
     url_archive = f"https://api.nasa.gov/EPIC/api/natural/date/" \
@@ -167,7 +155,6 @@ def main():
     publish_photo(
         token=os.getenv("API_KEY_NASA"),
         token_bot=os.getenv("API_KEY_BOT"),
-        dir_name="NASA_images",
         year=today.year,
         month=today.month,
         day=today_day,
@@ -176,21 +163,13 @@ def main():
         chat_id=os.getenv("CHAT_ID"),
     )
 
-    # list_obgects = [fetch_spacex_last_launch, get_apod_images, publish_photo]
-    # object_thread = []
-    # for i in list_obgects:
-    #     t = Thread(target=i)
-    #     object_thread.append(t)
-    # for i in object_thread:
-    #     i.start()
-
-    list_obgects = [fetch_spacex_last_launch, get_apod_images, publish_photo]
+    list_objects = [fetch_spacex_last_launch, get_apod_images, publish_photo]
     object_thread = []
-    for i in list_obgects:
-        t = Process(target=i)
-        object_thread.append(t)
-    for i in object_thread:
-        i.start()
+    for object in list_objects:
+        object_process = Process(target=object)
+        object_thread.append(object_process)
+    for proc in object_thread:
+        proc.start()
 
 
 if __name__ == "__main__":
