@@ -121,7 +121,6 @@ def main():
         format="%(asctime)s - [%(levelname)s] - %(message)s",
     )
 
-    CHAT_ID = -1001647060957
     load_dotenv()
     today = datetime.date.today()
     timeout, timeout_user, timeout_user_info = defines_timeout_user()
@@ -139,7 +138,7 @@ def main():
         "timeout": timeout,
         "timeout_user": timeout_user,
         "timeout_user_info": timeout_user_info,
-        "chat_id": CHAT_ID,
+        "chat_id": os.getenv("CHAT_ID"),
     }
 
     publish_photo(**parameters)
