@@ -119,13 +119,25 @@ def get_period_from_user():
     parser.add_argument(
         "-s", "--seconds", help="Set the update period in seconds use arguments: '-s or --seconds'"
     )
+    parser.add_argument(
+        "-a", "--apoid", help="Uploads a photo of space day use arguments: '-a or --apoid' and command: APOID"
+    )
+    parser.add_argument(
+        "-l", "--last", help="Uploads photos of the last NASA launch use arguments: '-l or --last' and command: LAST"
+    )
     args_timeout_hours = parser.parse_args().hours
     args_timeout_seconds = parser.parse_args().seconds
+    args_apoid = parser.parse_args().apoid
+    args_last_launch = parser.parse_args().last
 
     if args_timeout_hours:
         return int(args_timeout_hours)
     elif args_timeout_seconds:
         return float(args_timeout_seconds) / 60 / 60
+    elif args_apoid:
+        get_apod_images(token=os.getenv("API_KEY_NASA"))
+    elif args_last_launch:
+        fetch_spacex_last_launch(token=os.getenv("API_KEY_NASA"))
     else:
         return 24
 
@@ -145,13 +157,12 @@ def main():
     )
     load_dotenv()
     today = datetime.date.today()
-    timeout = defines_timeout_user()
     if today.day < 10:
         today_day = f"0{today.day - 2}"
     url_archive = f"https://api.nasa.gov/EPIC/api/natural/date/" \
                   f"{today.year}-{today.month}-{today_day}"
-    fetch_spacex_last_launch(token=os.getenv("API_KEY_NASA"))
-    get_apod_images(token=os.getenv("API_KEY_NASA"))
+    timeout = defines_timeout_user()
+
     publish_photo(
         token=os.getenv("API_KEY_NASA"),
         token_bot=os.getenv("API_KEY_BOT"),
@@ -162,14 +173,6 @@ def main():
         timeout=timeout,
         chat_id=os.getenv("CHAT_ID"),
     )
-
-    list_objects = [fetch_spacex_last_launch, get_apod_images, publish_photo]
-    object_thread = []
-    for object in list_objects:
-        object_process = Process(target=object)
-        object_thread.append(object_process)
-    for proc in object_thread:
-        proc.start()
 
 
 if __name__ == "__main__":
