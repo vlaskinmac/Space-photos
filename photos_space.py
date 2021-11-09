@@ -20,19 +20,19 @@ def get_container_links(url, token):
     return response.json()
 
 
-def fetch_spacex_last_launch(*args, **kwargs):
-    container_links = get_container_links(url=kwargs["url_archive"], token=kwargs["token"])
+def fetch_spacex_last_launch(url_archive, token, dir_name, year, month, day):
+    container_links = get_container_links(url=url_archive, token=token)
     if not container_links:
         logging.warning("Нет данных")
         print("Нет данных")
         exit()
-    if not os.path.exists(kwargs["dir_name"]):
-        os.mkdir(kwargs["dir_name"])
-    file_path = os.path.abspath(kwargs["dir_name"])
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+    file_path = os.path.abspath(dir_name)
     for image_url_number, image_url in enumerate(container_links):
-        data = {"api_key": kwargs["token"]}
+        data = {"api_key": token}
         url_image = f"https://api.nasa.gov/EPIC/archive/natural/" \
-                    f"{kwargs['year']}/{kwargs['month']}/{kwargs['day']}/png/{image_url['image']}.png"
+                    f"{year}/{month}/{day}/png/{image_url['image']}.png"
         response_image = requests.get(url_image, params=data)
         response_image.raise_for_status()
         logging.warning(response_image.status_code)
@@ -46,29 +46,25 @@ def fetch_spacex_last_launch(*args, **kwargs):
     return file_path
 
 
-def publish_photo(*args, **kwargs):
-    file_path = fetch_spacex_last_launch(*args, **kwargs)
+def publish_photo(token, token_bot, dir_name, year, month, day, url, timeout, chat_id):
+    file_path = fetch_spacex_last_launch(
+        url_archive=url,
+        token=token,
+        dir_name=dir_name,
+        year=year,
+        month=month,
+        day=day,
+    )
     file_images = os.listdir(file_path)
-    token_bot = kwargs["token_bot"]
+    token_bot = token_bot
     bot = telegram.Bot(token=token_bot)
 
     while True:
         try:
-            bot.send_message(text="Добрый день!", chat_id=kwargs["chat_id"])
-            bot.send_message(text=f"Фотки за {kwargs['today_date']} число!", chat_id=kwargs["chat_id"])
-            count = 0
             for image in file_images:
-                count += 1
                 file_images_nasa = os.path.join(file_path, image)
-                bot.send_message(text=f"Фотка № {count}:", chat_id=kwargs["chat_id"])
-                bot.send_photo(chat_id=kwargs["chat_id"], photo=open(file_images_nasa, "rb"))
-                time.sleep(10)
-            bot.send_message(text=f"Ожидание следующей публикации!", chat_id=kwargs["chat_id"])
-            bot.send_message(
-                text=f"Следующая публикация через {kwargs['timeout_user_info']}",
-                chat_id=kwargs["chat_id"],
-            )
-            time.sleep(int(kwargs["timeout"]))
+                bot.send_photo(chat_id=chat_id, photo=open(file_images_nasa, "rb"))
+            time.sleep(int(timeout))
         except TelegramError as exc:
             logging.warning(exc)
 
@@ -120,28 +116,21 @@ def main():
         filemode="w",
         format="%(asctime)s - [%(levelname)s] - %(message)s",
     )
-
     load_dotenv()
     today = datetime.date.today()
     timeout, timeout_user, timeout_user_info = defines_timeout_user()
-
-    parameters = {
-        "token": os.getenv("API_KEY_NASA"),
-        "token_bot": os.getenv("API_KEY_BOT"),
-        "dir_name": "NASA_images",
-        "year": f"{today.year}",
-        "month": f"{today.month}",
-        "day": f"{today.day}",
-        "today_date": f"{today}",
-        "url_archive": f"https://api.nasa.gov/EPIC/api/natural/date/"
-                       f"{today.year}-{today.month}-{today.day}",
-        "timeout": timeout,
-        "timeout_user": timeout_user,
-        "timeout_user_info": timeout_user_info,
-        "chat_id": os.getenv("CHAT_ID"),
-    }
-
-    publish_photo(**parameters)
+    url_archive = f"https://api.nasa.gov/EPIC/api/natural/date/{today.year}-{today.month}-{today.day}"
+    publish_photo(
+        token=os.getenv("API_KEY_NASA"),
+        token_bot=os.getenv("API_KEY_BOT"),
+        dir_name="NASA_images",
+        year=today.year,
+        month=today.month,
+        day=today.day,
+        url=url_archive,
+        timeout=timeout,
+        chat_id=os.getenv("CHAT_ID"),
+    )
 
 
 if __name__ == "__main__":
