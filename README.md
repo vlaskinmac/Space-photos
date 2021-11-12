@@ -68,15 +68,13 @@ You need to create a `.env` file and write all sensitive data into it, like this
 ```python
 API_KEY_NASA="272a05d39ec46fdac5be4ac7be45f3f"
 API_KEY_BOT="2127492642:AAFC4-Ey3WTtFNCcSzbDN7Z7y1ePaw8IbTU"
-CHAT_ID = -1001647060957
+CHAT_ID=-1001647060957
 ```
 
 ## Launch code
 #### Arguments
 - Set the update period in hours use arguments: **-hh** or **--hours**
 - Set the update period in seconds use arguments: **-s** or **--seconds**
-- Uploads a photo of space day use arguments: '-a or --apod' and command: **`APOD`**
-- Uploads photos of the last [NASA](https://www.nasa.gov) launch use arguments: '-l or --last' and command: **`LAST`**
 - To call help, use the required arguments **-h** or **--help**
 
 **Examples of commands:**
@@ -94,15 +92,6 @@ $ python photos_space.py --hours 4
 $ python photos_space.py 
 ```
 
-- Uploads a photo of space day:
-```python
-$ python photos_space.py -a APOD
-```
-
-- Uploads photos of the last [NASA](https://www.nasa.gov) launch:
-```python
-$ python photos_space.py -l LAST
-```
 
 ## Authors
 

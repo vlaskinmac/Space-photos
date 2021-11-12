@@ -1,10 +1,10 @@
 import argparse
-import datetime
 import logging
 import os
 import random
 import time
 import urllib
+from datetime import timedelta, datetime
 from urllib.parse import urlparse
 
 import requests
@@ -22,86 +22,75 @@ def get_container_links(url, token):
     return response.json()
 
 
-def get_file_path(dir_name):
+def get_file_path(dir_name="spase_images"):
     os.makedirs(dir_name, exist_ok=True)
     file_path = os.path.abspath(dir_name)
     return file_path
 
 
+def get_tail_url(url):
+    parse_path_url = urlparse(url)
+    path_clean = urllib.parse.unquote(parse_path_url.path)
+    url_file_name = os.path.split(path_clean)
+    url_tail = os.path.splitext(url_file_name[-1])[-1]
+    return url_tail
+
+
 def get_apod_images(token):
-    dirname = "apod"
     url = "https://api.nasa.gov/planetary/apod"
     container_links = get_container_links(url=url, token=token)
-    file_path = get_file_path(dir_name=dirname)
+    file_path = get_file_path()
     for image_url_number, image_url in enumerate([container_links]):
         if image_url["media_type"] == "image":
-            response_image = requests.get(image_url["url"])
-            response_image.raise_for_status()
-            logging.warning(response_image.status_code)
-            cut_path_url = urlparse(image_url["url"])
-            cut_path_clean = urllib.parse.unquote(cut_path_url.path)
-            name_file_url = os.path.split(cut_path_clean)
-            tail_url = os.path.splitext(name_file_url[-1])[-1]
-            with open(f"{file_path}/{image_url_number}{tail_url}", "wb") as file:
-                file.write(response_image.content)
+            image_response = requests.get(image_url["url"])
+            image_response.raise_for_status()
+            logging.warning(image_response.status_code)
+            url_tail= get_tail_url(url=image_url["url"])
+            with open(f"{file_path}/{'apod-'}{image_url_number}{url_tail}", "wb") as file:
+                file.write(image_response.content)
 
 
-def fetch_spacex_last_launch(token):
-    dirname = "last_launch"
+def fetch_spacex_last_launch():
     url = "https://api.spacexdata.com/v3/launches/55"
-    container_links = get_container_links(url=url, token=token)
-    file_path = get_file_path(dir_name=dirname)
+    container_links = get_container_links(url=url, token=None)
+    file_path = get_file_path()
     for image_url_number, image_url in enumerate(container_links["links"]["flickr_images"]):
-        response_image = requests.get(image_url)
-        response_image.raise_for_status()
-        logging.warning(response_image.status_code)
-        cut_path_url = urlparse(image_url)
-        cut_path_clean = urllib.parse.unquote(cut_path_url.path)
-        name_file_url = os.path.split(cut_path_clean)
-        tail_url = os.path.splitext(name_file_url[-1])[-1]
-        with open(f"{file_path}/{image_url_number}{tail_url}", "wb") as file:
-            file.write(response_image.content)
+        image_response = requests.get(image_url)
+        image_response.raise_for_status()
+        logging.warning(image_response.status_code)
+        url_tail = get_tail_url(url=image_url)
+        with open(f"{file_path}/{'spacex-'}{image_url_number}{url_tail}", "ab") as file:
+            file.write(image_response.content)
 
 
-def get_earth_images(url_archive, token, year, month, day):
-    dirname = "earth"
-    container_links = get_container_links(url=url_archive, token=token)
+def get_earth_images(archive_url, token, date):
+    container_links = get_container_links(url=archive_url, token=token)
     if not container_links:
         logging.warning("Нет данных")
-        print("Нет данных")
-        exit()
-    file_path = get_file_path(dir_name=dirname)
+        return
+    file_path = get_file_path()
     for image_url_number, image_url in enumerate(container_links):
         data = {"api_key": token}
         url_image = f"https://api.nasa.gov/EPIC/archive/natural/" \
-                    f"{year}/{month}/{day}/png/{image_url['image']}.png"
-        response_image = requests.get(url_image, params=data)
-        response_image.raise_for_status()
-        logging.warning(response_image.status_code)
-        cut_path_url = urlparse(url_image)
-        cut_path_clean = urllib.parse.unquote(cut_path_url.path)
-        name_file_url = os.path.split(cut_path_clean)
-        tail_url = os.path.splitext(name_file_url[-1])[-1]
-        with open(f"{file_path}/{image_url_number}{tail_url}", "wb") as file:
-            file.write(response_image.content)
-    return file_path
+                    f"{date}/png/{image_url['image']}.png"
+        image_response = requests.get(url_image, params=data)
+        image_response.raise_for_status()
+        logging.warning(image_response.status_code)
+        url_tail = get_tail_url(url=url_image)
+        with open(f"{file_path}/{'earth-'}{image_url_number}{url_tail}", "ab") as file:
+            file.write(image_response.content)
 
 
-def publish_photo(token, token_bot, year, month, day, url, timeout, chat_id):
-    file_path = get_earth_images(
-        url_archive=url,
-        token=token,
-        year=year,
-        month=month,
-        day=day,
-    )
-    file_images = random.choice(os.listdir(file_path))
-    token_bot = token_bot
-    bot = telegram.Bot(token=token_bot)
+def publish_photo(token_bot, timeout, chat_id):
+    file_path = get_file_path()
+    token = token_bot
+    bot = telegram.Bot(token=token)
     while True:
+        file_images = random.choice(os.listdir(file_path))
         try:
             file_images_nasa = os.path.join(file_path, file_images)
-            bot.send_photo(chat_id=chat_id, photo=open(file_images_nasa, "rb"))
+            with open(file_images_nasa, "rb") as file_photo:
+                bot.send_photo(chat_id=chat_id, photo=file_photo)
             time.sleep(int(timeout))
         except TelegramError as exc:
             logging.warning(exc)
@@ -118,35 +107,16 @@ def get_period_from_user():
     parser.add_argument(
         "-s", "--seconds", help="Set the update period in seconds use arguments: '-s or --seconds'"
     )
-    parser.add_argument(
-        "-a", "--apod", help="Uploads a photo of space day use arguments: '-a or --apod' and command: APOD"
-    )
-    parser.add_argument(
-        "-l", "--last", help="Uploads photos of the last NASA launch use arguments: '-l or --last' and command: LAST"
-    )
-    args_timeout_hours = parser.parse_args().hours
-    args_timeout_seconds = parser.parse_args().seconds
-    args_apod = parser.parse_args().apod
-    args_last_launch = parser.parse_args().last
+    args = parser.parse_args()
+    timeout_hours = args.hours
+    timeout_seconds = args.seconds
 
-    if args_timeout_hours:
-        return int(args_timeout_hours)
-    elif args_timeout_seconds:
-        return float(args_timeout_seconds) / 60 / 60
-    elif args_apod:
-        get_apod_images(token=os.getenv("API_KEY_NASA"))
-        exit()
-    elif args_last_launch:
-        fetch_spacex_last_launch(token=os.getenv("API_KEY_NASA"))
-        exit()
+    if timeout_hours:
+        return int(timeout_hours) * 60 * 60
+    elif timeout_seconds:
+        return int(timeout_seconds)
     else:
-        return 24
-
-
-def defines_timeout_user():
-    timeout_user = get_period_from_user()
-    timeout = 60 * 60 * timeout_user
-    return timeout
+        return 24 * 60 * 60
 
 
 def main():
@@ -157,20 +127,25 @@ def main():
         format="%(asctime)s - [%(levelname)s] - %(message)s",
     )
     load_dotenv()
-    today = datetime.date.today()
-    if today.day < 10:
-        today_day = f"0{today.day - 2}"
-    url_archive = f"https://api.nasa.gov/EPIC/api/natural/date/" \
-                  f"{today.year}-{today.month}-{today_day}"
-    timeout = defines_timeout_user()
-
-    publish_photo(
+    timeout = get_period_from_user()
+    today = datetime.now()
+    delayed = timedelta(3)
+    if today.day < 13:
+        delayed_day = today - delayed
+    else:
+        delayed_day = today - delayed
+    date_natural = delayed_day.strftime("%Y-%m-%d")
+    archive_url = f"https://api.nasa.gov/EPIC/api/natural/date/{date_natural}"
+    get_apod_images(token=os.getenv("API_KEY_NASA"))
+    date_arhive = delayed_day.strftime("%Y/%m/%d")
+    get_earth_images(
+        archive_url=archive_url,
         token=os.getenv("API_KEY_NASA"),
+        date=date_arhive,
+    )
+    fetch_spacex_last_launch()
+    publish_photo(
         token_bot=os.getenv("API_KEY_BOT"),
-        year=today.year,
-        month=today.month,
-        day=today_day,
-        url=url_archive,
         timeout=timeout,
         chat_id=os.getenv("CHAT_ID"),
     )
