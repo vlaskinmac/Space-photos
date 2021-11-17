@@ -115,7 +115,7 @@ def get_period_from_user():
     elif timeout_seconds:
         return int(timeout_seconds)
     else:
-        return 24 * 60 * 60
+        return 86400
 
 
 def main():
