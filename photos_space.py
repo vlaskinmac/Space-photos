@@ -83,8 +83,7 @@ def get_earth_images(archive_url, token, date):
 
 def publish_photo(token_bot, timeout, chat_id):
     file_path = get_file_path()
-    token = token_bot
-    bot = telegram.Bot(token=token)
+    bot = telegram.Bot(token=token_bot)
     while True:
         file_images = random.choice(os.listdir(file_path))
         try:
@@ -129,11 +128,9 @@ def main():
     load_dotenv()
     timeout = get_period_from_user()
     today = datetime.now()
-    delayed = timedelta(3)
-    if today.day < 13:
-        delayed_day = today - delayed
-    else:
-        delayed_day = today - delayed
+    data_delay = 3
+    delayed = timedelta(data_delay)
+    delayed_day = today - delayed
     date_natural = delayed_day.strftime("%Y-%m-%d")
     archive_url = f"https://api.nasa.gov/EPIC/api/natural/date/{date_natural}"
     get_apod_images(token=os.getenv("API_KEY_NASA"))
